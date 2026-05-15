@@ -12,6 +12,6 @@ export default defineConfig({
   preview: {
     host: "0.0.0.0",
 
-    allowedHosts: ["all"],
+    allowedHosts: ["task-management-system-production-4778.up.railway.app"],
   },
 });
