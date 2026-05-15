@@ -1,59 +1,36 @@
-const dashboardRoutes = require("./routes/dashboard.routes");
-const taskRoutes = require("./routes/task.routes");
-const projectRoutes = require("./routes/project.routes");
-const testRoutes = require("./routes/test.routes");
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-const morgan = require("morgan");
+import express from "express";
+import cors from "cors";
+import dotenv from "dotenv";
 
-const authRoutes = require("./routes/auth.routes");
-
-
+dotenv.config();
 
 const app = express();
 
-
 /*
 =================================
-Middlewares
+Middleware
 =================================
 */
 
-app.use(cors());
-
 app.use(express.json());
 
-app.use(helmet());
-
-app.use(morgan("dev"));
-
+app.use(
+  cors({
+    origin: "*",
+    credentials: true,
+  })
+);
 /*
 =================================
-Test Route
+Health Route
 =================================
 */
 
 app.get("/", (req, res) => {
-  res.status(200).json({
+  res.json({
     success: true,
     message: "Task Management System API Running",
   });
 });
 
-/*
-=================================
-Export App
-=================================
-*/
-app.use("/api/auth", authRoutes);
-
-app.use("/api/test", testRoutes);
-
-app.use("/api/projects", projectRoutes);
-
-app.use("/api/tasks", taskRoutes);
-
-app.use("/api/dashboard", dashboardRoutes);
-
-module.exports = app;
+export default app;
