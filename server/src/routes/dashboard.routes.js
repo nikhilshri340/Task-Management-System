@@ -1,0 +1,19 @@
+const express = require("express");
+
+const {
+  getDashboardData,
+} = require("../controllers/dashboard.controller");
+
+const protect = require("../middleware/auth.middleware");
+
+const router = express.Router();
+
+/*
+=================================
+Dashboard Analytics
+=================================
+*/
+
+router.get("/", protect, getDashboardData);
+
+module.exports = router;
