@@ -1,4 +1,4 @@
-const prisma = require("../config/db");
+import pool from "../config/db.js";
 
 /*
 =================================
@@ -6,157 +6,103 @@ Get Dashboard Analytics
 =================================
 */
 
-const getDashboardData = async (req, res) => {
-  try {
-    /*
-    ============================
-    Get User Projects
-    ============================
-    */
+export const getDashboardData =
+  async (req, res) => {
+    try {
+      /*
+      ============================
+      Total Projects
+      ============================
+      */
 
-    const memberships =
-      await prisma.projectMember.findMany({
-        where: {
-          userId: req.user.id,
-        },
+      const projectsResult =
+        await pool.query(
+          "SELECT COUNT(*) FROM projects"
+        );
 
-        select: {
-          projectId: true,
-        },
-      });
+      const totalProjects =
+        projectsResult.rows[0]
+          .count;
 
-    const projectIds = memberships.map(
-      (member) => member.projectId
-    );
+      /*
+      ============================
+      Total Tasks
+      ============================
+      */
 
-    /*
-    ============================
-    Total Tasks
-    ============================
-    */
+      const tasksResult =
+        await pool.query(
+          "SELECT COUNT(*) FROM tasks"
+        );
 
-    const totalTasks = await prisma.task.count({
-      where: {
-        projectId: {
-          in: projectIds,
-        },
-      },
-    });
+      const totalTasks =
+        tasksResult.rows[0].count;
 
-    /*
-    ============================
-    Tasks By Status
-    ============================
-    */
+      /*
+      ============================
+      Completed Tasks
+      ============================
+      */
 
-    const todoTasks = await prisma.task.count({
-      where: {
-        projectId: {
-          in: projectIds,
-        },
+      const completedResult =
+        await pool.query(
+          `
+          SELECT COUNT(*) 
+          FROM tasks
+          WHERE status = 'Completed'
+          `
+        );
 
-        status: "TODO",
-      },
-    });
+      const completedTasks =
+        completedResult.rows[0]
+          .count;
 
-    const inProgressTasks =
-      await prisma.task.count({
-        where: {
-          projectId: {
-            in: projectIds,
-          },
+      /*
+      ============================
+      Pending Tasks
+      ============================
+      */
 
-          status: "IN_PROGRESS",
-        },
-      });
+      const pendingResult =
+        await pool.query(
+          `
+          SELECT COUNT(*)
+          FROM tasks
+          WHERE status = 'Pending'
+          `
+        );
 
-    const completedTasks =
-      await prisma.task.count({
-        where: {
-          projectId: {
-            in: projectIds,
-          },
+      const pendingTasks =
+        pendingResult.rows[0]
+          .count;
 
-          status: "DONE",
-        },
-      });
+      /*
+      ============================
+      Response
+      ============================
+      */
 
-    /*
-    ============================
-    Overdue Tasks
-    ============================
-    */
+      return res.status(200).json({
+        success: true,
 
-    const overdueTasks = await prisma.task.count({
-      where: {
-        projectId: {
-          in: projectIds,
-        },
+        analytics: {
+          totalProjects,
 
-        dueDate: {
-          lt: new Date(),
-        },
+          totalTasks,
 
-        status: {
-          not: "DONE",
-        },
-      },
-    });
+          completedTasks,
 
-    /*
-    ============================
-    Tasks Per User
-    ============================
-    */
-
-    const tasksPerUser =
-      await prisma.task.groupBy({
-        by: ["assignedToId"],
-
-        where: {
-          projectId: {
-            in: projectIds,
-          },
-        },
-
-        _count: {
-          assignedToId: true,
+          pendingTasks,
         },
       });
+    } catch (error) {
+      console.log(error);
 
-    /*
-    ============================
-    Response
-    ============================
-    */
+      return res.status(500).json({
+        success: false,
 
-    return res.status(200).json({
-      success: true,
-
-      analytics: {
-        totalTasks,
-
-        tasksByStatus: {
-          todo: todoTasks,
-          inProgress: inProgressTasks,
-          completed: completedTasks,
-        },
-
-        overdueTasks,
-
-        tasksPerUser,
-      },
-    });
-  } catch (error) {
-    console.log(error);
-
-    return res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-};
-
-module.exports = {
-  getDashboardData,
-};
+        message:
+          error.toString(),
+      });
+    }
+  };

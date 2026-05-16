@@ -5,19 +5,11 @@ import {
 
 import Sidebar from "../components/Sidebar";
 import Navbar from "../components/Navbar";
+import api from "../api/axios";
 
 const Projects = () => {
   const [projects, setProjects] =
-    useState(() => {
-      const savedProjects =
-        localStorage.getItem(
-          "projects"
-        );
-
-      return savedProjects
-        ? JSON.parse(savedProjects)
-        : [];
-    });
+    useState([]);
 
   const [formData, setFormData] =
     useState({
@@ -25,12 +17,25 @@ const Projects = () => {
       description: "",
     });
 
+  const fetchProjects =
+    async () => {
+      try {
+        const response =
+          await api.get(
+            "/projects"
+          );
+
+        setProjects(
+          response.data.projects
+        );
+      } catch (error) {
+        console.log(error);
+      }
+    };
+
   useEffect(() => {
-    localStorage.setItem(
-      "projects",
-      JSON.stringify(projects)
-    );
-  }, [projects]);
+    fetchProjects();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({
@@ -41,44 +46,40 @@ const Projects = () => {
     });
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (
+    e
+  ) => {
     e.preventDefault();
 
-    if (
-      !formData.title ||
-      !formData.description
-    ) {
-      return;
-    }
-
-    const newProject = {
-      id: crypto.randomUUID(),
-
-      title: formData.title,
-
-      description:
-        formData.description,
-    };
-
-    setProjects((prev) => [
-      ...prev,
-      newProject,
-    ]);
-
-    setFormData({
-      title: "",
-      description: "",
-    });
-  };
-
-  const handleDelete = (id) => {
-    const updatedProjects =
-      projects.filter(
-        (project) =>
-          project.id !== id
+    try {
+      await api.post(
+        "/projects",
+        formData
       );
 
-    setProjects(updatedProjects);
+      fetchProjects();
+
+      setFormData({
+        title: "",
+        description: "",
+      });
+    } catch (error) {
+      console.log(error);
+    }
+  };
+
+  const handleDelete = async (
+    id
+  ) => {
+    try {
+      await api.delete(
+        `/projects/${id}`
+      );
+
+      fetchProjects();
+    } catch (error) {
+      console.log(error);
+    }
   };
 
   return (
@@ -87,6 +88,7 @@ const Projects = () => {
 
       <div className="flex-1 p-8">
         <Navbar />
+
         <h1 className="text-4xl font-bold">
           Projects 📁
         </h1>

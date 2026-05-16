@@ -1,8 +1,12 @@
-const jwt = require("jsonwebtoken");
+import jwt from "jsonwebtoken";
 
-const prisma = require("../config/db");
+import pool from "../config/db.js";
 
-const protect = async (req, res, next) => {
+const protect = async (
+  req,
+  res,
+  next
+) => {
   try {
     let token;
 
@@ -14,9 +18,14 @@ const protect = async (req, res, next) => {
 
     if (
       req.headers.authorization &&
-      req.headers.authorization.startsWith("Bearer")
+      req.headers.authorization.startsWith(
+        "Bearer"
+      )
     ) {
-      token = req.headers.authorization.split(" ")[1];
+      token =
+        req.headers.authorization.split(
+          " "
+        )[1];
     }
 
     /*
@@ -28,7 +37,9 @@ const protect = async (req, res, next) => {
     if (!token) {
       return res.status(401).json({
         success: false,
-        message: "Not authorized",
+
+        message:
+          "Not authorized",
       });
     }
 
@@ -49,25 +60,41 @@ const protect = async (req, res, next) => {
     ============================
     */
 
-    req.user = await prisma.user.findUnique({
-      where: {
-        id: decoded.id,
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
-        role: true,
-      },
-    });
+    const result =
+      await pool.query(
+        `
+        SELECT id, name, email
+        FROM users
+
+        WHERE id = $1
+        `,
+        [decoded.id]
+      );
+
+    if (
+      result.rows.length === 0
+    ) {
+      return res.status(401).json({
+        success: false,
+
+        message:
+          "User not found",
+      });
+    }
+
+    req.user = result.rows[0];
 
     next();
   } catch (error) {
+    console.log(error);
+
     return res.status(401).json({
       success: false,
-      message: "Not authorized",
+
+      message:
+        "Not authorized",
     });
   }
 };
 
-module.exports = protect;
+export default protect;

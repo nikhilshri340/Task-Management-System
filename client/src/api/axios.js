@@ -2,7 +2,7 @@ import axios from "axios";
 
 const api = axios.create({
   baseURL:
-    "https://task-management-system-production-450f.up.railway.app/api",
+    "http://localhost:5000/api",
 });
 
 export default api;

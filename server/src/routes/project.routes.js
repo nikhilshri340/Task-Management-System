@@ -1,39 +1,20 @@
 import express from "express";
 
+import {
+  getProjects,
+  createProject,
+  deleteProject,
+} from "../controllers/project.controller.js";
+
 const router = express.Router();
 
-router.get("/", async (req, res) => {
-  try {
-    res.status(200).json({
-      success: true,
-      projects: [],
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
+router.get("/", getProjects);
 
-router.post("/", async (req, res) => {
-  try {
-    const { title, description } = req.body;
+router.post("/", createProject);
 
-    res.status(201).json({
-      success: true,
-      message: "Project created successfully",
-      project: {
-        title,
-        description,
-      },
-    });
-  } catch (error) {
-    res.status(500).json({
-      success: false,
-      message: error.message,
-    });
-  }
-});
+router.delete(
+  "/:id",
+  deleteProject
+);
 
 export default router;

@@ -12,4 +12,5 @@ const generateToken = (userId) => {
   );
 };
 
-module.exports = generateToken;
+export default generateToken;
+export const generateToken;

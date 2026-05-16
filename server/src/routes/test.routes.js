@@ -42,4 +42,5 @@ router.get(
   }
 );
 
-module.exports = router;
+export default router;
+export const testRoutes = router;
