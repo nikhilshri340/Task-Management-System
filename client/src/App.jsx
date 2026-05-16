@@ -19,10 +19,8 @@ function App() {
       <Routes>
         <Route
           path="/"
-          element={
-            <Navigate to="/login" />
-          }
-        />
+          element={<Navigate to="/login" />}
+          />
 
         <Route
           path="/login"
@@ -42,7 +40,6 @@ function App() {
             </ProtectedRoute>
           }
         />
-
         <Route
           path="/projects"
           element={

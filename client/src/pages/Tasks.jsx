@@ -1,382 +1,212 @@
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+} from "react";
 
-import toast from "react-hot-toast";
+import Sidebar from "../components/Sidebar";
+import Navbar from "../components/Navbar";
 
-import DashboardLayout from "../layouts/DashboardLayout";
+const Tasks = () => {
+  const [tasks, setTasks] =
+    useState(() => {
+      const savedTasks =
+        localStorage.getItem(
+          "tasks"
+        );
 
-import api from "../api/axios";
-
-function Tasks() {
-  const [tasks, setTasks] = useState([]);
-
-  const [project, setProject] =
-    useState(null);
-
-  const [members, setMembers] =
-    useState([]);
-
-  const [loading, setLoading] =
-    useState(false);
-
-  const [formData, setFormData] =
-    useState({
-      title: "",
-      description: "",
-      priority: "MEDIUM",
-      dueDate: "",
-      assignedToId: "",
+      return savedTasks
+        ? JSON.parse(savedTasks)
+        : [];
     });
 
-  const projectId =
-    localStorage.getItem(
-      "selectedProjectId"
-    );
-
-  /*
-  =================================
-  Fetch Project
-  =================================
-  */
-
-  const fetchProject = async () => {
-    try {
-      const token =
-        localStorage.getItem("token");
-
-      const response = await api.get(
-        `/projects/${projectId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setProject(response.data.project);
-
-      setMembers(
-        response.data.project.members
-      );
-    } catch (error) {
-      console.log(error);
-    }
-  };
-
-  /*
-  =================================
-  Fetch Tasks
-  =================================
-  */
-
-  const fetchTasks = async () => {
-    try {
-      const token =
-        localStorage.getItem("token");
-
-      const response = await api.get(
-        `/tasks/project/${projectId}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      setTasks(response.data.tasks);
-    } catch (error) {
-      console.log(error);
-    }
-  };
+  const [formData, setFormData] =
+  useState({
+    title: "",
+    status: "Pending",
+    priority: "Medium",
+    dueDate: "",
+    project: "",
+  });
 
   useEffect(() => {
-    if (projectId) {
-      fetchProject();
-
-      fetchTasks();
-    }
-  }, []);
-
-  /*
-  =================================
-  Handle Change
-  =================================
-  */
+    localStorage.setItem(
+      "tasks",
+      JSON.stringify(tasks)
+    );
+  }, [tasks]);
 
   const handleChange = (e) => {
     setFormData({
       ...formData,
 
-      [e.target.name]: e.target.value,
+      [e.target.name]:
+        e.target.value,
     });
   };
 
-  /*
-  =================================
-  Create Task
-  =================================
-  */
-
-  const handleSubmit = async (e) => {
+  const handleSubmit = (e) => {
     e.preventDefault();
 
-    try {
-      setLoading(true);
-
-      const token =
-        localStorage.getItem("token");
-
-      await api.post(
-        "/tasks",
-        {
-          ...formData,
-
-          projectId,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      toast.success(
-        "Task created successfully"
-      );
-
-      setFormData({
-        title: "",
-        description: "",
-        priority: "MEDIUM",
-        dueDate: "",
-        assignedToId: "",
-      });
-
-      fetchTasks();
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Something went wrong"
-      );
-    } finally {
-      setLoading(false);
+    if (!formData.title) {
+      return;
     }
+
+    const newTask = {
+      id: crypto.randomUUID(),
+
+      title: formData.title,
+
+      status: formData.status,
+    };
+
+    setTasks((prev) => [
+      ...prev,
+      newTask,
+    ]);
+
+    setFormData({
+      title: "",
+      status: "Pending",
+    });
   };
 
-  /*
-  =================================
-  Update Status
-  =================================
-  */
+  const handleDelete = (id) => {
+    const updatedTasks =
+      tasks.filter(
+        (task) => task.id !== id
+      );
 
-  const updateStatus = async (
-    taskId,
-    status
-  ) => {
-    try {
-      const token =
-        localStorage.getItem("token");
+    setTasks(updatedTasks);
+  };
 
-      await api.patch(
-        `/tasks/${taskId}/status`,
-        {
-          status,
-        },
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-          },
+  const toggleStatus = (id) => {
+    const updatedTasks =
+      tasks.map((task) => {
+        if (task.id === id) {
+          return {
+            ...task,
+
+            status:
+              task.status ===
+              "Completed"
+                ? "Pending"
+                : "Completed",
+          };
         }
-      );
 
-      toast.success("Status updated");
+        return task;
+      });
 
-      fetchTasks();
-    } catch (error) {
-      toast.error(
-        error.response?.data?.message ||
-          "Something went wrong"
-      );
-    }
+    setTasks(updatedTasks);
   };
 
   return (
-    <DashboardLayout>
-      <h1 className="text-3xl font-bold mb-8">
-        Tasks
-      </h1>
+    <div className="flex bg-gray-900 min-h-screen text-white">
+      <Sidebar />
 
-      {!projectId ? (
-        <div className="bg-yellow-100 text-yellow-700 p-5 rounded-xl">
-          Please select a project first
-        </div>
-      ) : (
-        <>
-          {/* Create Task */}
+      <div className="flex-1 p-8">
+        <Navbar />
 
-          <div className="bg-white rounded-2xl shadow-md p-6 mb-10">
-            <h2 className="text-xl font-semibold mb-5">
-              Create Task
-            </h2>
+        <h1 className="text-4xl font-bold">
+          Tasks ✅
+        </h1>
 
-            <form
-              onSubmit={handleSubmit}
-              className="space-y-4"
+        <p className="text-gray-400 mt-2">
+          Manage your tasks here.
+        </p>
+
+        <div className="bg-gray-800 p-6 rounded-xl mt-8">
+          <h2 className="text-2xl font-semibold mb-6">
+            Create Task
+          </h2>
+
+          <form
+            onSubmit={handleSubmit}
+            className="space-y-4"
+          >
+            <input
+              type="text"
+              name="title"
+              placeholder="Task title"
+              value={formData.title}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600 outline-none"
+            />
+
+            <select
+              name="status"
+              value={formData.status}
+              onChange={handleChange}
+              className="w-full px-4 py-3 rounded-lg bg-gray-700 border border-gray-600 outline-none"
             >
-              <input
-                type="text"
-                name="title"
-                value={formData.title}
-                onChange={handleChange}
-                placeholder="Task title"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3"
-                required
-              />
+              <option>
+                Pending
+              </option>
 
-              <textarea
-                name="description"
-                value={
-                  formData.description
-                }
-                onChange={handleChange}
-                placeholder="Task description"
-                className="w-full border border-gray-300 rounded-lg px-4 py-3"
-              />
+              <option>
+                Completed
+              </option>
+            </select>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  className="border border-gray-300 rounded-lg px-4 py-3"
-                >
-                  <option value="LOW">
-                    LOW
-                  </option>
+            <button
+              type="submit"
+              className="bg-green-600 hover:bg-green-700 px-6 py-3 rounded-lg"
+            >
+              Create Task
+            </button>
+          </form>
+        </div>
 
-                  <option value="MEDIUM">
-                    MEDIUM
-                  </option>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mt-10">
+          {tasks.map((task) => (
+            <div
+              key={task.id}
+              className="bg-gray-800 p-6 rounded-xl shadow-lg"
+            >
+              <h2 className="text-2xl font-bold">
+                {task.title}
+              </h2>
 
-                  <option value="HIGH">
-                    HIGH
-                  </option>
-                </select>
+              <p
+                className={`mt-4 font-semibold ${
+                  task.status ===
+                  "Completed"
+                    ? "text-green-400"
+                    : "text-yellow-400"
+                }`}
+              >
+                {task.status}
+              </p>
 
-                <input
-                  type="date"
-                  name="dueDate"
-                  value={formData.dueDate}
-                  onChange={handleChange}
-                  className="border border-gray-300 rounded-lg px-4 py-3"
-                />
-
-                <select
-                  name="assignedToId"
-                  value={
-                    formData.assignedToId
+              <div className="flex gap-3 mt-5">
+                <button
+                  onClick={() =>
+                    toggleStatus(
+                      task.id
+                    )
                   }
-                  onChange={handleChange}
-                  className="border border-gray-300 rounded-lg px-4 py-3"
-                  required
+                  className="bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-lg"
                 >
-                  <option value="">
-                    Assign User
-                  </option>
+                  Toggle Status
+                </button>
 
-                  {members.map((member) => (
-                    <option
-                      key={member.user.id}
-                      value={member.user.id}
-                    >
-                      {member.user.name}
-                    </option>
-                  ))}
-                </select>
+                <button
+                  onClick={() =>
+                    handleDelete(
+                      task.id
+                    )
+                  }
+                  className="bg-red-600 hover:bg-red-700 px-4 py-2 rounded-lg"
+                >
+                  Delete
+                </button>
               </div>
-
-              <button
-                type="submit"
-                disabled={loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg"
-              >
-                {loading
-                  ? "Creating..."
-                  : "Create Task"}
-              </button>
-            </form>
-          </div>
-
-          {/* Tasks */}
-
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {tasks.map((task) => (
-              <div
-                key={task.id}
-                className="bg-white rounded-2xl shadow-md p-6"
-              >
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-xl font-bold">
-                    {task.title}
-                  </h2>
-
-                  <span className="text-sm bg-blue-100 text-blue-600 px-3 py-1 rounded-full">
-                    {task.priority}
-                  </span>
-                </div>
-
-                <p className="text-gray-600 mb-5">
-                  {task.description}
-                </p>
-
-                <div className="space-y-2 text-sm text-gray-500">
-                  <p>
-                    Assigned To:{" "}
-                    {
-                      task.assignedTo.name
-                    }
-                  </p>
-
-                  <p>
-                    Due Date:{" "}
-                    {task.dueDate
-                      ? new Date(
-                          task.dueDate
-                        ).toLocaleDateString()
-                      : "No Date"}
-                  </p>
-                </div>
-
-                <div className="mt-5">
-                  <select
-                    value={task.status}
-                    onChange={(e) =>
-                      updateStatus(
-                        task.id,
-                        e.target.value
-                      )
-                    }
-                    className="w-full border border-gray-300 rounded-lg px-4 py-2"
-                  >
-                    <option value="TODO">
-                      TODO
-                    </option>
-
-                    <option value="IN_PROGRESS">
-                      IN PROGRESS
-                    </option>
-
-                    <option value="DONE">
-                      DONE
-                    </option>
-                  </select>
-                </div>
-              </div>
-            ))}
-          </div>
-        </>
-      )}
-    </DashboardLayout>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
   );
-}
+};
 
 export default Tasks;

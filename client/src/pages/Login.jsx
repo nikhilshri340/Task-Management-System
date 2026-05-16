@@ -12,13 +12,9 @@ const Login = () => {
     password: "",
   });
 
-  const [loading, setLoading] =
-    useState(false);
-
   const handleChange = (e) => {
     setFormData({
       ...formData,
-
       [e.target.name]: e.target.value,
     });
   };
@@ -27,8 +23,6 @@ const Login = () => {
     e.preventDefault();
 
     try {
-      setLoading(true);
-
       const response = await api.post(
         "/auth/login",
         formData
@@ -46,18 +40,12 @@ const Login = () => {
         JSON.stringify(data.user)
       );
 
-      alert("Login successful");
-
       navigate("/dashboard");
     } catch (error) {
-      console.log(error);
-
       alert(
         error.response?.data?.message ||
           "Something went wrong"
       );
-    } finally {
-      setLoading(false);
     }
   };
 
@@ -76,54 +64,39 @@ const Login = () => {
           onSubmit={handleSubmit}
           className="space-y-5"
         >
-          <div>
-            <label className="block text-gray-300 mb-2">
-              Email
-            </label>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 outline-none"
+          />
 
-            <input
-              type="email"
-              name="email"
-              placeholder="Enter your email"
-              value={formData.email}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white outline-none border border-gray-600 focus:border-blue-500"
-            />
-          </div>
-
-          <div>
-            <label className="block text-gray-300 mb-2">
-              Password
-            </label>
-
-            <input
-              type="password"
-              name="password"
-              placeholder="Enter password"
-              value={formData.password}
-              onChange={handleChange}
-              required
-              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white outline-none border border-gray-600 focus:border-blue-500"
-            />
-          </div>
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 outline-none"
+          />
 
           <button
             type="submit"
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition-all text-white py-3 rounded-lg font-semibold"
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg"
           >
-            {loading
-              ? "Logging in..."
-              : "Login"}
-          </button>
+            Login
+            </button>
         </form>
 
         <p className="text-gray-400 text-center mt-6">
           Don’t have an account?{" "}
           <Link
             to="/register"
-            className="text-blue-400 hover:underline"
+            className="text-blue-400"
           >
             Register
           </Link>

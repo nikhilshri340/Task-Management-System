@@ -1,54 +1,109 @@
+import { useState } from "react";
+
+import { Link, useNavigate } from "react-router-dom";
+
+import api from "../api/axios";
+
 const Register = () => {
-  const user = JSON.parse(
-    localStorage.getItem("user")
-  );
+  const navigate = useNavigate();
+
+  const [formData, setFormData] =
+    useState({
+      name: "",
+      email: "",
+      password: "",
+    });
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+    };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    try {
+      const response = await api.post(
+        "/auth/register",
+        formData
+      );
+
+      const data = response.data;
+
+      localStorage.setItem(
+        "token",
+        data.token
+      );
+
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data.user)
+      );
+      navigate("/dashboard");
+    } catch (error) {
+      alert(
+        error.response?.data?.message ||
+          "Something went wrong"
+      );
+    }
+  };
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-10">
-      <h1 className="text-5xl font-bold">
-        Dashboard 🚀
-      </h1>
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <div className="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-lg">
+        <h1 className="text-3xl font-bold text-white text-center mb-2">
+          Task Management System
+        </h1>
 
-      <p className="mt-4 text-xl">
-        Welcome{" "}
-        <span className="text-blue-400">
-          {user?.name}
-        </span>
-      </p>
+        <p className="text-gray-400 text-center mb-6">
+          Create your account
+        </p>
 
-      <div className="mt-10 grid grid-cols-1 md:grid-cols-3 gap-6">
-        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-semibold">
-            Total Projects
-          </h2>
+        <form
+          onSubmit={handleSubmit}
+          className="space-y-5"
+        >
+          <input
+            type="text"
+            name="name"
+            placeholder="Name"
+            value={formData.name}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 outline-none"
+          />
 
-          <p className="text-4xl mt-4">
-            0
-          </p>
-        </div>
+          <input
+            type="email"
+            name="email"
+            placeholder="Email"
+            value={formData.email}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 outline-none"
+          />
+          <input
+            type="password"
+            name="password"
+            placeholder="Password"
+            value={formData.password}
+            onChange={handleChange}
+            required
+            className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white border border-gray-600 outline-none"
+          />
 
-        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-semibold">
-            Total Tasks
-          </h2>
-
-          <p className="text-4xl mt-4">
-            0
-          </p>
-        </div>
-
-        <div className="bg-gray-800 p-6 rounded-xl shadow-lg">
-          <h2 className="text-2xl font-semibold">
-            Completed Tasks
-          </h2>
-
-          <p className="text-4xl mt-4">
-            0
-          </p>
-        </div>
+          <button
+            type="submit"
+            className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-lg"
+          >
+            Register
+          </button>
+        </form>
       </div>
     </div>
   );
 };
 
-export default Dashboard;
+export default Register;
