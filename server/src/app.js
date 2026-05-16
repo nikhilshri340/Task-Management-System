@@ -2,15 +2,11 @@ import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
 
+import authroutes from "./routes/auth.routes.js";
+
 dotenv.config();
 
 const app = express();
-
-/*
-=================================
-Middleware
-=================================
-*/
 
 app.use(express.json());
 
@@ -20,11 +16,6 @@ app.use(
     credentials: true,
   })
 );
-/*
-=================================
-Health Route
-=================================
-*/
 
 app.get("/", (req, res) => {
   res.json({
@@ -32,5 +23,7 @@ app.get("/", (req, res) => {
     message: "Task Management System API Running",
   });
 });
+
+app.use("/api/auth", authroutes);
 
 export default app;
