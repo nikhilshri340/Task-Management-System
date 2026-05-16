@@ -2,31 +2,18 @@ import { useState } from "react";
 
 import { Link, useNavigate } from "react-router-dom";
 
-import toast from "react-hot-toast";
-
 import api from "../api/axios";
 
-import useAuthStore from "../store/authStore";
-
-function Login() {
+const Login = () => {
   const navigate = useNavigate();
-
-  const setAuth = useAuthStore(
-    (state) => state.setAuth
-  );
 
   const [formData, setFormData] = useState({
     email: "",
     password: "",
   });
 
-  const [loading, setLoading] = useState(false);
-
-  /*
-  =================================
-  Handle Change
-  =================================
-  */
+  const [loading, setLoading] =
+    useState(false);
 
   const handleChange = (e) => {
     setFormData({
@@ -35,12 +22,6 @@ function Login() {
       [e.target.name]: e.target.value,
     });
   };
-
-  /*
-  =================================
-  Handle Submit
-  =================================
-  */
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -53,22 +34,25 @@ function Login() {
         formData
       );
 
-      /*
-      ================================
-      Save Auth
-      ================================
-      */
+      const data = response.data;
 
-      setAuth(
-        response.data.user,
-        response.data.token
+      localStorage.setItem(
+        "token",
+        data.token
       );
 
-      toast.success("Login successful");
+      localStorage.setItem(
+        "user",
+        JSON.stringify(data.user)
+      );
 
-      navigate("/");
+      alert("Login successful");
+
+      navigate("/dashboard");
     } catch (error) {
-      toast.error(
+      console.log(error);
+
+      alert(
         error.response?.data?.message ||
           "Something went wrong"
       );
@@ -78,13 +62,13 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-100 px-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-lg p-8">
-        <h1 className="text-3xl font-bold text-center text-blue-600 mb-2">
+    <div className="min-h-screen flex items-center justify-center bg-gray-900 px-4">
+      <div className="w-full max-w-md bg-gray-800 p-8 rounded-xl shadow-lg">
+        <h1 className="text-3xl font-bold text-white text-center mb-2">
           Task Management System
         </h1>
 
-        <p className="text-center text-gray-500 mb-8">
+        <p className="text-gray-400 text-center mb-6">
           Login to your account
         </p>
 
@@ -93,34 +77,34 @@ function Login() {
           className="space-y-5"
         >
           <div>
-            <label className="block mb-2 text-sm font-medium">
+            <label className="block text-gray-300 mb-2">
               Email
             </label>
 
             <input
               type="email"
               name="email"
+              placeholder="Enter your email"
               value={formData.email}
               onChange={handleChange}
-              placeholder="Enter your email"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
               required
+              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white outline-none border border-gray-600 focus:border-blue-500"
             />
           </div>
 
           <div>
-            <label className="block mb-2 text-sm font-medium">
+            <label className="block text-gray-300 mb-2">
               Password
             </label>
 
             <input
               type="password"
               name="password"
+              placeholder="Enter password"
               value={formData.password}
               onChange={handleChange}
-              placeholder="Enter password"
-              className="w-full border border-gray-300 rounded-lg px-4 py-3 outline-none focus:ring-2 focus:ring-blue-500"
               required
+              className="w-full px-4 py-3 rounded-lg bg-gray-700 text-white outline-none border border-gray-600 focus:border-blue-500"
             />
           </div>
 
@@ -130,16 +114,16 @@ function Login() {
             className="w-full bg-blue-600 hover:bg-blue-700 transition-all text-white py-3 rounded-lg font-semibold"
           >
             {loading
-              ? "Logging In..."
+              ? "Logging in..."
               : "Login"}
           </button>
         </form>
 
-        <p className="text-center text-sm text-gray-500 mt-6">
+        <p className="text-gray-400 text-center mt-6">
           Don’t have an account?{" "}
           <Link
             to="/register"
-            className="text-blue-600 font-medium"
+            className="text-blue-400 hover:underline"
           >
             Register
           </Link>
@@ -147,6 +131,6 @@ function Login() {
       </div>
     </div>
   );
-}
+};
 
 export default Login;

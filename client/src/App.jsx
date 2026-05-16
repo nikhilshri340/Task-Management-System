@@ -12,40 +12,39 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 function App() {
   return (
     <Routes>
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute>
-            <Dashboard />
-          </ProtectedRoute>
-        }
-      />
-
       <Route path="/login" element={<Login />} />
 
-      <Route
-        path="/register"
-        element={<Register />}
-      />
+<Route
+  path="/register"
+  element={<Register />}
+/>
 
-      <Route
-        path="/projects"
-        element={<Projects />}
-      />
-
-      <Route
-        path="/projects/:id"
-        element={
+<Route
+  path="/dashboard"
+  element={
     <ProtectedRoute>
-      <ProjectDetails />
+      <Dashboard />
     </ProtectedRoute>
-        }
-      />
+  }
+/>
 
-      <Route path="/tasks" element={<Tasks />} />
+<Route
+  path="/projects"
+  element={
+    <ProtectedRoute>
+      <Projects />
+    </ProtectedRoute>
+  }
+/>
 
-      <Route path="*" element={<NotFound />} />
-    
+<Route
+  path="/tasks"
+  element={
+    <ProtectedRoute>
+      <Tasks />
+    </ProtectedRoute>
+  }
+/>
     </Routes>
   );
 }
