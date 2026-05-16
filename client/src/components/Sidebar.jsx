@@ -1,60 +1,127 @@
 import {
-  LayoutDashboard,
-  FolderKanban,
-  CheckSquare,
-  LogOut,
-} from "lucide-react";
-
-import { Link, useNavigate } from "react-router-dom";
+  Link,
+  useLocation,
+} from "react-router-dom";
 
 const Sidebar = () => {
-  const navigate = useNavigate();
+  /*
+  ================================
+  Location
+  ================================
+  */
+
+  const location =
+    useLocation();
+
+  /*
+  ================================
+  Role
+  ================================
+  */
+
+  const role =
+    localStorage
+      .getItem("role")
+      ?.toLowerCase();
+
+  /*
+  ================================
+  Menu Items
+  ================================
+  */
+
+  const menuItems = [
+    {
+      name: "Dashboard",
+      path: "/dashboard",
+    },
+
+    {
+      name: "Projects",
+      path: "/projects",
+    },
+
+    {
+      name: "Tasks",
+      path: "/tasks",
+    },
+
+    /*
+    ============================
+    Admin Only Members Page
+    ============================
+    */
+
+    ...(role === "admin"
+      ? [
+          {
+            name: "Members",
+            path: "/members",
+          },
+        ]
+      : []),
+  ];
+
+  /*
+  ================================
+  Logout
+  ================================
+  */
 
   const handleLogout = () => {
-    localStorage.removeItem("token");
+    localStorage.clear();
 
-    localStorage.removeItem("user");
-
-    navigate("/login");
+    window.location.href =
+      "/login";
   };
-   return (
-    <div className="w-64 bg-gray-800 h-screen p-6 flex flex-col">
-      <h1 className="text-2xl font-bold text-white mb-10">
-        Task Manager
-      </h1>
 
-      <nav className="flex flex-col gap-4">
-        <Link
-          to="/dashboard"
-          className="flex items-center gap-3 text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition-all"
-        >
-          <LayoutDashboard size={20} />
-          Dashboard
-        </Link>
+  return (
+    <div className="w-72 bg-gray-800 min-h-screen p-6 flex flex-col justify-between">
+      {/* =========================
+          TOP SECTION
+      ========================== */}
 
-        <Link
-          to="/projects"
-          className="flex items-center gap-3 text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition-all"
-        >
-          <FolderKanban size={20} />
-          Projects
-        </Link>
-        <Link
-          to="/tasks"
-          className="flex items-center gap-3 text-gray-300 hover:text-white hover:bg-gray-700 px-4 py-3 rounded-lg transition-all"
-        >
-          <CheckSquare size={20} />
-          Tasks
-        </Link>
-      </nav>
+      <div>
+        {/* Logo */}
 
-      <button
-        onClick={handleLogout}
-        className="mt-auto flex items-center gap-3 bg-red-600 hover:bg-red-700 text-white px-4 py-3 rounded-lg transition-all"
-      >
-        <LogOut size={20} />
-        Logout
-      </button>
+        <h1 className="text-3xl font-bold text-white mb-10">
+          Task Manager
+        </h1>
+
+        {/* Menu */}
+
+        <div className="space-y-4">
+          {menuItems.map(
+            (item) => (
+              <Link
+                key={item.path}
+                to={item.path}
+                className={`block px-5 py-4 rounded-xl transition ${
+                  location.pathname ===
+                  item.path
+                    ? "bg-blue-600 text-white"
+                    : "bg-gray-700 text-gray-300 hover:bg-gray-600"
+                }`}
+              >
+                {item.name}
+              </Link>
+            )
+          )}
+        </div>
+      </div>
+
+      {/* =========================
+          BOTTOM SECTION
+      ========================== */}
+
+      <div className="flex justify-start">
+        <button
+          onClick={handleLogout}
+          className="bg-red-600 hover:bg-red-700 px-6 py-3 rounded-xl text-white font-semibold"
+        >
+          Logout
+        </button>
+      </div>
     </div>
   );
 };

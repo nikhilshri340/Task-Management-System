@@ -2,7 +2,7 @@ import pool from "../config/db.js";
 
 /*
 =================================
-Get Dashboard Analytics
+Dashboard Analytics
 =================================
 */
 
@@ -11,70 +11,104 @@ export const getDashboardData =
     try {
       /*
       ============================
-      Total Projects
-      ============================
-      */
-
-      const projectsResult =
-        await pool.query(
-          "SELECT COUNT(*) FROM projects"
-        );
-
-      const totalProjects =
-        projectsResult.rows[0]
-          .count;
-
-      /*
-      ============================
       Total Tasks
       ============================
       */
 
-      const tasksResult =
-        await pool.query(
-          "SELECT COUNT(*) FROM tasks"
-        );
-
-      const totalTasks =
-        tasksResult.rows[0].count;
-
-      /*
-      ============================
-      Completed Tasks
-      ============================
-      */
-
-      const completedResult =
+      const totalTasksResult =
         await pool.query(
           `
           SELECT COUNT(*) 
           FROM tasks
-          WHERE status = 'Completed'
           `
         );
-
-      const completedTasks =
-        completedResult.rows[0]
-          .count;
 
       /*
       ============================
-      Pending Tasks
+      Tasks By Status
       ============================
       */
 
-      const pendingResult =
+      const todoResult =
         await pool.query(
           `
           SELECT COUNT(*)
+
           FROM tasks
-          WHERE status = 'Pending'
+
+          WHERE status = 'TODO'
           `
         );
 
-      const pendingTasks =
-        pendingResult.rows[0]
-          .count;
+      const inProgressResult =
+        await pool.query(
+          `
+          SELECT COUNT(*)
+
+          FROM tasks
+
+          WHERE status = 'IN_PROGRESS'
+          `
+        );
+
+      const doneResult =
+        await pool.query(
+          `
+          SELECT COUNT(*)
+
+          FROM tasks
+
+          WHERE status = 'DONE'
+          `
+        );
+
+      /*
+      ============================
+      Overdue Tasks
+      ============================
+      */
+
+      const overdueResult =
+        await pool.query(
+          `
+          SELECT COUNT(*)
+
+          FROM tasks
+
+          WHERE
+          due_date < CURRENT_DATE
+
+          AND status != 'DONE'
+          `
+        );
+
+      /*
+      ============================
+      Tasks Per User
+      ============================
+      */
+
+      const tasksPerUser =
+        await pool.query(
+          `
+          SELECT
+          users.name,
+
+          COUNT(tasks.id)
+          AS total_tasks
+
+          FROM users
+
+          LEFT JOIN tasks
+
+          ON users.id =
+          tasks.assigned_to
+
+          GROUP BY users.name
+
+          ORDER BY total_tasks DESC
+          `
+        );
 
       /*
       ============================
@@ -82,23 +116,40 @@ export const getDashboardData =
       ============================
       */
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
 
         analytics: {
-          totalProjects,
+          totalTasks:
+            totalTasksResult
+              .rows[0].count,
 
-          totalTasks,
+          tasksByStatus: {
+            todo:
+              todoResult
+                .rows[0].count,
 
-          completedTasks,
+            inProgress:
+              inProgressResult
+                .rows[0].count,
 
-          pendingTasks,
+            done:
+              doneResult
+                .rows[0].count,
+          },
+
+          overdueTasks:
+            overdueResult
+              .rows[0].count,
+
+          tasksPerUser:
+            tasksPerUser.rows,
         },
       });
     } catch (error) {
       console.log(error);
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
 
         message:

@@ -206,53 +206,54 @@ export const createTask =
         priority,
         dueDate,
         status,
+        assignedTo,
+        projectId,
       } = req.body;
-
-      if (!title) {
-        return res.status(400).json({
-          success: false,
-          message:
-            "Title is required",
-        });
-      }
 
       const result =
         await pool.query(
           `
-        INSERT INTO tasks
-        (
-          title,
-          description,
-          priority,
-          due_date,
-          status
-        )
+          INSERT INTO tasks
+          (
+            title,
+            description,
+            priority,
+            due_date,
+            status,
+            assigned_to,
+            project_id
+          )
 
-        VALUES ($1, $2, $3, $4, $5)
+          VALUES
+          ($1, $2, $3, $4, $5, $6, $7)
 
-        RETURNING *
-        `,
+          RETURNING *
+          `,
           [
             title,
             description,
-            priority || "Medium",
+            priority ||
+              "Medium",
+
             dueDate || null,
-            status || "Pending",
+
+            status || "TODO",
+
+            assignedTo,
+
+            projectId,
           ]
         );
 
-      return res.status(201).json({
+      res.status(201).json({
         success: true,
-
-        message:
-          "Task created successfully",
 
         task: result.rows[0],
       });
     } catch (error) {
       console.log(error);
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
 
         message:
@@ -273,14 +274,27 @@ export const getTasks =
       const result =
         await pool.query(
           `
-        SELECT *
-        FROM tasks
+          SELECT t.*
 
-        ORDER BY created_at DESC
-        `
+          FROM tasks t
+
+          INNER JOIN
+          project_members pm
+
+          ON
+          t.project_id =
+          pm.project_id
+
+          WHERE
+          pm.user_id = $1
+
+          ORDER BY
+          t.created_at DESC
+          `,
+          [req.user.id]
         );
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
 
         tasks: result.rows,
@@ -288,7 +302,7 @@ export const getTasks =
     } catch (error) {
       console.log(error);
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
 
         message:
@@ -310,32 +324,86 @@ export const updateTaskStatus =
 
       const { status } = req.body;
 
+      /*
+      ============================
+      Find Task
+      ============================
+      */
+
+      const taskResult =
+        await pool.query(
+          `
+          SELECT *
+          FROM tasks
+
+          WHERE id = $1
+          `,
+          [id]
+        );
+
+      if (
+        taskResult.rows.length === 0
+      ) {
+        return res.status(404).json({
+          success: false,
+
+          message:
+            "Task not found",
+        });
+      }
+
+      const task =
+        taskResult.rows[0];
+
+      /*
+      ============================
+      Permission Check
+      ============================
+      */
+
+      if (
+        req.user.role !==
+          "Admin" &&
+        task.assigned_to !==
+          req.user.id
+      ) {
+        return res.status(403).json({
+          success: false,
+
+          message:
+            "Access denied",
+        });
+      }
+
+      /*
+      ============================
+      Update Task
+      ============================
+      */
+
       const result =
         await pool.query(
           `
-        UPDATE tasks
+          UPDATE tasks
 
-        SET status = $1
+          SET status = $1
 
-        WHERE id = $2
+          WHERE id = $2
 
-        RETURNING *
-        `,
+          RETURNING *
+          `,
           [status, id]
         );
 
-      return res.status(200).json({
+      res.status(200).json({
         success: true,
-
-        message:
-          "Task updated successfully",
 
         task: result.rows[0],
       });
     } catch (error) {
       console.log(error);
 
-      return res.status(500).json({
+      res.status(500).json({
         success: false,
 
         message:

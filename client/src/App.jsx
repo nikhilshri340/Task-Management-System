@@ -10,6 +10,7 @@ import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
 import Projects from "./pages/Projects";
 import Tasks from "./pages/Tasks";
+import Members from "./pages/Members";
 
 import ProtectedRoute from "./routes/ProtectedRoute";
 
@@ -56,6 +57,10 @@ function App() {
               <Tasks />
             </ProtectedRoute>
           }
+        />
+          <Route
+           path="/members"
+           element={<Members />}
         />
       </Routes>
     </BrowserRouter>

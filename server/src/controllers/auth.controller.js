@@ -4,7 +4,31 @@ import jwt from "jsonwebtoken";
 
 import pool from "../config/db.js";
 
-export const register =
+/*
+=================================
+Generate JWT
+=================================
+*/
+
+const generateToken = (id) => {
+  return jwt.sign(
+    { id },
+
+    process.env.JWT_SECRET,
+
+    {
+      expiresIn: "7d",
+    }
+  );
+};
+
+/*
+=================================
+Register User
+=================================
+*/
+
+export const registerUser =
   async (req, res) => {
     try {
       const {
@@ -13,9 +37,38 @@ export const register =
         password,
       } = req.body;
 
+      /*
+      ============================
+      Validate Fields
+      ============================
+      */
+
+      if (
+        !name ||
+        !email ||
+        !password
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "All fields are required",
+        });
+      }
+
+      /*
+      ============================
+      Check Existing User
+      ============================
+      */
+
       const existingUser =
         await pool.query(
-          "SELECT * FROM users WHERE email = $1",
+          `
+          SELECT *
+          FROM users
+          WHERE email = $1
+          `,
           [email]
         );
 
@@ -23,10 +76,18 @@ export const register =
         existingUser.rows.length > 0
       ) {
         return res.status(400).json({
+          success: false,
+
           message:
             "User already exists",
         });
       }
+
+      /*
+      ============================
+      Hash Password
+      ============================
+      */
 
       const hashedPassword =
         await bcrypt.hash(
@@ -34,60 +95,82 @@ export const register =
           10
         );
 
+      /*
+      ============================
+      Create User
+      Default Role = member
+      ============================
+      */
+
       const result =
         await pool.query(
           `
-        INSERT INTO users
-        (name, email, password)
+          INSERT INTO users
+          (name, email, password, role)
 
-        VALUES ($1, $2, $3)
+          VALUES
+          ($1, $2, $3, $4)
 
-        RETURNING *
-        `,
+          RETURNING
+          id,
+          name,
+          email,
+          role
+          `,
           [
             name,
             email,
             hashedPassword,
+            "member",
           ]
         );
 
-      const user =
-        result.rows[0];
+      /*
+      ============================
+      Generate Token
+      ============================
+      */
 
-      const token = jwt.sign(
-        {
-          id: user.id,
-        },
+      const token =
+        generateToken(
+          result.rows[0].id
+        );
 
-        process.env.JWT_SECRET,
+      /*
+      ============================
+      Response
+      ============================
+      */
 
-        {
-          expiresIn: "7d",
-        }
-      );
+      return res.status(201).json({
+        success: true,
 
-      res.status(201).json({
+        message:
+          "User registered successfully",
+
         token,
 
-        user: {
-          id: user.id,
-
-          name: user.name,
-
-          email: user.email,
-        },
+        user: result.rows[0],
       });
     } catch (error) {
       console.log(error);
 
-      res.status(500).json({
+      return res.status(500).json({
+        success: false,
+
         message:
-          error.toString(),
+          error.message,
       });
     }
   };
 
-export const login =
+/*
+=================================
+Login User
+=================================
+*/
+
+export const loginUser =
   async (req, res) => {
     try {
       const {
@@ -95,16 +178,52 @@ export const login =
         password,
       } = req.body;
 
+      /*
+      ============================
+      Validate Fields
+      ============================
+      */
+
+      if (
+        !email ||
+        !password
+      ) {
+        return res.status(400).json({
+          success: false,
+
+          message:
+            "Email and password required",
+        });
+      }
+
+      /*
+      ============================
+      Find User
+      ============================
+      */
+
       const result =
         await pool.query(
-          "SELECT * FROM users WHERE email = $1",
+          `
+          SELECT *
+          FROM users
+          WHERE email = $1
+          `,
           [email]
         );
+
+      /*
+      ============================
+      User Not Found
+      ============================
+      */
 
       if (
         result.rows.length === 0
       ) {
-        return res.status(400).json({
+        return res.status(401).json({
+          success: false,
+
           message:
             "Invalid credentials",
         });
@@ -112,6 +231,12 @@ export const login =
 
       const user =
         result.rows[0];
+
+      /*
+      ============================
+      Compare Password
+      ============================
+      */
 
       const isMatch =
         await bcrypt.compare(
@@ -120,25 +245,35 @@ export const login =
         );
 
       if (!isMatch) {
-        return res.status(400).json({
+        return res.status(401).json({
+          success: false,
+
           message:
             "Invalid credentials",
         });
       }
 
-      const token = jwt.sign(
-        {
-          id: user.id,
-        },
+      /*
+      ============================
+      Generate Token
+      ============================
+      */
 
-        process.env.JWT_SECRET,
+      const token =
+        generateToken(user.id);
 
-        {
-          expiresIn: "7d",
-        }
-      );
+      /*
+      ============================
+      Response
+      ============================
+      */
 
-      res.status(200).json({
+      return res.status(200).json({
+        success: true,
+
+        message:
+          "Login successful",
+
         token,
 
         user: {
@@ -147,14 +282,18 @@ export const login =
           name: user.name,
 
           email: user.email,
+
+          role: user.role,
         },
       });
     } catch (error) {
       console.log(error);
 
-      res.status(500).json({
+      return res.status(500).json({
+        success: false,
+
         message:
-          error.toString(),
+          error.message,
       });
     }
   };
