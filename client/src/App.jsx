@@ -1,7 +1,10 @@
-import Dashboard from "./pages/Dashboard";
-import { Routes, Route } from "react-router-dom";
-import NotFound from "./pages/NotFound";
-import ProjectDetails from "./pages/ProjectDetails";
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Navigate,
+} from "react-router-dom";
+
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Dashboard from "./pages/Dashboard";
@@ -12,43 +15,54 @@ import ProtectedRoute from "./routes/ProtectedRoute";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/login" element={<Login />} />
+    <BrowserRouter>
+      <Routes>
+        <Route
+          path="/"
+          element={
+            <Navigate to="/login" />
+          }
+        />
 
-<Route
-  path="/register"
-  element={<Register />}
-/>
+        <Route
+          path="/login"
+          element={<Login />}
+        />
 
-<Route
-  path="/dashboard"
-  element={
-    <ProtectedRoute>
-      <Dashboard />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/register"
+          element={<Register />}
+        />
 
-<Route
-  path="/projects"
-  element={
-    <ProtectedRoute>
-      <Projects />
-    </ProtectedRoute>
-  }
-/>
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute>
+              <Dashboard />
+            </ProtectedRoute>
+          }
+        />
 
-<Route
-  path="/tasks"
-  element={
-    <ProtectedRoute>
-      <Tasks />
-    </ProtectedRoute>
-  }
-/>
-    </Routes>
+        <Route
+          path="/projects"
+          element={
+            <ProtectedRoute>
+              <Projects />
+            </ProtectedRoute>
+          }
+        />
+
+        <Route
+          path="/tasks"
+          element={
+            <ProtectedRoute>
+              <Tasks />
+            </ProtectedRoute>
+          }
+        />
+      </Routes>
+    </BrowserRouter>
   );
 }
-
 
 export default App;
