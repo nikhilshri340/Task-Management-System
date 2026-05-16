@@ -1,6 +1,8 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
+import projectroutes from "./routes/project.routes.js";
+import dashboardroutes from "./routes/dashboard.routes.js";
 
 import authroutes from "./routes/auth.routes.js";
 
@@ -25,5 +27,9 @@ app.get("/", (req, res) => {
 });
 
 app.use("/api/auth", authroutes);
+
+app.use("/api/projects", projectroutes);
+
+app.use("/api/dashboard", dashboardroutes);
 
 export default app;

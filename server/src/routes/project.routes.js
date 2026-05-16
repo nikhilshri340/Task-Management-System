@@ -1,59 +1,39 @@
-const express = require("express");
-
-const {
-  createProject,
-  getProjects,
-  getSingleProject,
-  addMember,
-  removeMember,
-} = require("../controllers/project.controller");
-
-const protect = require("../middleware/auth.middleware");
+import express from "express";
 
 const router = express.Router();
 
-/*
-=================================
-Create Project
-=================================
-*/
+router.get("/", async (req, res) => {
+  try {
+    res.status(200).json({
+      success: true,
+      projects: [],
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
-router.post("/", protect, createProject);
+router.post("/", async (req, res) => {
+  try {
+    const { title, description } = req.body;
 
-/*
-=================================
-Get All Projects
-=================================
-*/
+    res.status(201).json({
+      success: true,
+      message: "Project created successfully",
+      project: {
+        title,
+        description,
+      },
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+    });
+  }
+});
 
-router.get("/", protect, getProjects);
-
-/*
-=================================
-Get Single Project
-=================================
-*/
-
-router.get("/:id", protect, getSingleProject);
-
-/*
-=================================
-Add Member
-=================================
-*/
-
-router.post("/:id/members", protect, addMember);
-
-/*
-=================================
-Remove Member
-=================================
-*/
-
-router.delete(
-  "/:id/members/:memberId",
-  protect,
-  removeMember
-);
-
-module.exports = router;
+export default router;
