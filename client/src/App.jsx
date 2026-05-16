@@ -1,3 +1,4 @@
+import Dashboard from "./pages/Dashboard";
 import { Routes, Route } from "react-router-dom";
 import NotFound from "./pages/NotFound";
 import ProjectDetails from "./pages/ProjectDetails";
